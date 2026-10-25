@@ -25,6 +25,7 @@
   --earth: #c9d5e4;
   --sat: #184f95;
   --hl: #c2410c;
+  --sh0: #184f95; --sh1: #0f8a7e; --sh2: #7c4dcc; --sh3: #c0377a; --sh4: #5a8a1f; --sh5: #a07a10;
   --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --f-label: "Archivo Narrow", "Arial Narrow", Arial, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
@@ -34,12 +35,14 @@
     --bg: #0e1318; --panel: #151b23; --line: #263140; --fg: #e3e9f1; --muted: #93a0b2;
     --accent: #5598e7; --accent-soft: #1c3554; --band: #2a78d6; --nodata: #3d4148; --mapbg: #0a0e12;
     --coast: rgba(236, 242, 250, .7); --warn: #f0a050; --space: #07090c; --earth: #1b2735; --sat: #86b6ef; --hl: #f59e5b; color-scheme: dark;
+    --sh0: #86b6ef; --sh1: #4fd1c0; --sh2: #b69cf5; --sh3: #f07fb4; --sh4: #a3d465; --sh5: #e3c25a;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0e1318; --panel: #151b23; --line: #263140; --fg: #e3e9f1; --muted: #93a0b2;
   --accent: #5598e7; --accent-soft: #1c3554; --band: #2a78d6; --nodata: #3d4148; --mapbg: #0a0e12;
   --coast: rgba(236, 242, 250, .7); --warn: #f0a050; --space: #07090c; --earth: #1b2735; --sat: #86b6ef; --hl: #f59e5b; color-scheme: dark;
+  --sh0: #86b6ef; --sh1: #4fd1c0; --sh2: #b69cf5; --sh3: #f07fb4; --sh4: #a3d465; --sh5: #e3c25a;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -53,7 +56,7 @@ header p { margin: 0; color: var(--muted); }
 
 /* parameter rack */
 form.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: grid; gap: 14px; }
-fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; min-width: 0; }
 legend { padding: 0; margin-bottom: 4px; font-family: var(--f-label); font-weight: 600; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
@@ -61,7 +64,21 @@ label.f { display: grid; gap: 3px; font-size: 12px; color: var(--muted); min-wid
 input[type=number], select { width: 100%; font: 500 13px var(--f-mono); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 6px 7px; min-width: 0; }
 input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .check { display: flex; gap: 7px; align-items: center; font-size: 13px; }
-.notation { font: 500 13px var(--f-mono); background: var(--bg); border: 1px dashed var(--line); border-radius: 4px; padding: 6px 8px; text-align: center; }
+.shells { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.shell { border: 1px solid var(--line); border-radius: 5px; min-width: 0; }
+.shead { display: flex; align-items: stretch; }
+.stog { flex: 1; min-width: 0; display: flex; align-items: center; gap: 7px; background: none; border: 0; padding: 7px 8px; cursor: pointer; text-align: left; color: var(--fg); font: inherit; }
+.stog .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.stog .sname { font: 600 11px var(--f-label); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); flex: none; }
+.stog .snot { font: 500 12px var(--f-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
+.stog::after { content: '▾'; color: var(--muted); flex: none; transition: transform .15s; }
+.stog[aria-expanded=false]::after { transform: rotate(-90deg); }
+.sdel { background: none; border: 0; border-left: 1px solid var(--line); color: var(--muted); padding: 0 11px; cursor: pointer; font-size: 17px; line-height: 1; }
+.sdel:hover:not(:disabled) { color: var(--warn); }
+.sdel:disabled { opacity: .35; cursor: default; }
+.sbody { display: grid; gap: 8px; padding: 2px 8px 10px; }
+button.add { font: 600 13px var(--f-display); color: var(--accent); background: transparent; border: 1px dashed var(--line); border-radius: 5px; padding: 7px; cursor: pointer; }
+button.add:hover { border-color: var(--accent); }
 .est { font-size: 12px; color: var(--muted); }
 .est.bad { color: var(--warn); }
 button.run { font: 600 14px var(--f-display); background: var(--accent); color: #fff; border: 0; border-radius: 5px; padding: 10px; cursor: pointer; }
@@ -77,8 +94,9 @@ main { display: grid; gap: 12px; min-width: 0; }
 .scalemax { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
 .scalemax input { width: 90px; }
 
-.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-@media (max-width: 640px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+@media (max-width: 1100px) { .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } .tile:last-child { grid-column: span 2; } }
+@media (max-width: 640px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tile:last-child { grid-column: span 2; } }
 .tile { background: var(--panel); padding: 10px 12px; display: grid; gap: 2px; }
 .tile .k { font-family: var(--f-label); font-weight: 600; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
 .tile .v { font: 500 20px var(--f-mono); font-variant-numeric: tabular-nums; }
@@ -139,26 +157,15 @@ main { display: grid; gap: 12px; min-width: 0; }
 <div class="app">
   <header>
     <h1>Walker Revisit Map</h1>
-    <p>Revisit time for every 10 × 10 km cell on Earth, for one Walker shell.</p>
+    <p>Revisit time for every 10 × 10 km cell on Earth, for a constellation of one or more Walker shells.</p>
   </header>
 
   <div class="layout">
     <form class="panel" id="cfg" novalidate>
       <fieldset>
-        <legend>Walker shell</legend>
-        <div class="row2">
-          <label class="f">Altitude (km)<input type="number" id="alt" value="500" min="200" max="40000" step="10"></label>
-          <label class="f">Inclination (°)<input type="number" id="inc" value="97.4" min="0" max="180" step="0.1"></label>
-        </div>
-        <div class="row3">
-          <label class="f">T (sats)<input type="number" id="T" value="24" min="1" max="5000" step="1"></label>
-          <label class="f">P (planes)<input type="number" id="P" value="6" min="1" max="500" step="1"></label>
-          <label class="f">F (phasing)<input type="number" id="F" value="1" min="0" max="499" step="1"></label>
-        </div>
-        <label class="f">Pattern
-          <select id="pattern"><option value="delta">Delta (nodes over 360°)</option><option value="star">Star (nodes over 180°)</option></select>
-        </label>
-        <div class="notation" id="notation">i: T/P/F</div>
+        <legend>Walker shells</legend>
+        <div class="shells" id="shells"></div>
+        <button type="button" class="add" id="addShell">+ Add shell</button>
       </fieldset>
       <fieldset>
         <legend>Access</legend>
@@ -166,7 +173,6 @@ main { display: grid; gap: 12px; min-width: 0; }
           <label class="f">Min elevation (°)<input type="number" id="elev" value="0" min="0" max="89" step="0.5"></label>
           <label class="f">Max off-nadir (°)<input type="number" id="nadir" value="30" min="0" max="89" step="0.5" placeholder="none"></label>
         </div>
-        <div class="est" id="fp"></div>
       </fieldset>
       <fieldset>
         <legend>Simulation</legend>
@@ -192,9 +198,10 @@ main { display: grid; gap: 12px; min-width: 0; }
       <div class="toolbar">
         <div class="seg" id="metric" role="group" aria-label="Metric">
           <button type="button" data-m="0" aria-pressed="true">Max revisit</button>
-          <button type="button" data-m="1" aria-pressed="false">Mean revisit</button>
-          <button type="button" data-m="2" aria-pressed="false">Time covered</button>
-          <button type="button" data-m="3" aria-pressed="false">Passes</button>
+          <button type="button" data-m="1" aria-pressed="false">95th pct revisit</button>
+          <button type="button" data-m="2" aria-pressed="false">Mean revisit</button>
+          <button type="button" data-m="3" aria-pressed="false">Time covered</button>
+          <button type="button" data-m="4" aria-pressed="false">Passes</button>
         </div>
         <label class="check"><input type="checkbox" id="edges"> Count gaps at run start/end</label>
         <label class="check"><input type="checkbox" id="sats"> Show satellites at end of run</label>
@@ -204,6 +211,7 @@ main { display: grid; gap: 12px; min-width: 0; }
       <div class="tiles">
         <div class="tile"><span class="k">Worst max revisit</span><span class="v" id="t0">–</span><span class="s" id="t0s">&nbsp;</span></div>
         <div class="tile"><span class="k">Area-mean max revisit</span><span class="v" id="t1">–</span><span class="s">over cells with access</span></div>
+        <div class="tile"><span class="k">Area-mean P95 revisit</span><span class="v" id="t4">–</span><span class="s" id="t4s">&nbsp;</span></div>
         <div class="tile"><span class="k">Area-mean time covered</span><span class="v" id="t2">–</span><span class="s">fraction of run in view</span></div>
         <div class="tile"><span class="k">Area never seen</span><span class="v" id="t3">–</span><span class="s" id="t3s">&nbsp;</span></div>
       </div>
@@ -228,8 +236,9 @@ main { display: grid; gap: 12px; min-width: 0; }
 
       <div class="notes">
         <p><b>Grid.</b> Rows are 10 km tall (1/2001 of a meridian). Each row is split into as many cells as fit its circumference at 10 km, so every cell covers about 100 km². Each cell is evaluated at its centre. Zoom in to see cell boundaries.</p>
-        <p><b>Orbits.</b> Spherical Earth (R = 6371 km), circular orbits, two-body motion with optional J2 drift of node and argument of latitude. At t = 0, Greenwich and plane 1's ascending node are both at 0° longitude.</p>
-        <p><b>Revisit.</b> A cell has access while its centre is inside any satellite's footprint (minimum elevation, capped by maximum off-nadir angle if set). A revisit gap is the time between two accesses, measured to the nearest time step. Gaps before the first and after the last access are left out unless you tick the option above.</p>
+        <p><b>Orbits.</b> Spherical Earth (R = 6371 km), circular orbits, two-body motion with optional J2 drift of node and argument of latitude. At t = 0 Greenwich is at 0° longitude, and each shell's plane 1 ascending node sits at that shell's RAAN offset.</p>
+        <p><b>Revisit.</b> A cell has access while its centre is inside the footprint of any satellite in any shell (minimum elevation, capped by maximum off-nadir angle if set; footprint size follows each shell's altitude). A revisit gap is the time between two accesses, measured to the nearest time step. Gaps before the first and after the last access are left out unless you tick the option above.</p>
+        <p><b>95th percentile.</b> Per cell, the gap length that 95 % of that cell's gaps are at or below, interpolated linearly between ranks. Each cell keeps its 8 longest gaps, which makes the value exact up to about 140 gaps per cell; past that it shows the 8th-longest gap, an upper bound, marked ≤ in the tooltip.</p>
       </div>
       </section>
       <section id="tab-geo" role="tabpanel" aria-labelledby="tabbtn-geo" class="tabpanel" hidden>
@@ -237,6 +246,7 @@ main { display: grid; gap: 12px; min-width: 0; }
           <div class="geowrap" id="geowrap"><canvas id="geo"></canvas><div id="geotip" hidden></div></div>
           <aside class="geoside">
             <div class="gk">Epoch shown</div><div class="gv" id="g-time">–</div>
+            <div class="gk">Constellation</div><div class="gv" id="g-con">–</div>
             <div class="gk">Shell</div><div class="gv" id="g-shell">–</div>
             <div class="gk">Orbit radius</div><div class="gv" id="g-rad">–</div>
             <div class="gk">Period</div><div class="gv" id="g-per">–</div>
@@ -260,6 +270,7 @@ const RE = 6371.0, MU = 398600.4418, J2 = 1.08263e-3, WE = 7.2921159e-5;
 const RAMP = ['#cde2fb','#b7d3f6','#9ec5f4','#86b6ef','#6da7ec','#5598e7','#3987e5','#2a78d6','#256abf','#1c5cab','#184f95','#104281','#0d366b'];
 const METRICS = [
   { name: 'Max revisit', unit: 'dur' },
+  { name: 'P95 revisit', unit: 'dur' },
   { name: 'Mean revisit', unit: 'dur' },
   { name: 'Time covered', unit: '%' },
   { name: 'Passes', unit: 'n' },
@@ -291,15 +302,15 @@ function niceTicks(max, n = 5) {
 }
 
 /* ---------- form ---------- */
-const F = ['alt','inc','T','P','F','pattern','elev','nadir','dur','dt','j2'];
+const F = ['elev','nadir','dur','dt','j2'];
+let shells = [{ alt: 500, inc: 97.4, T: 24, P: 6, F: 1, pattern: 'delta', raan: 0 }], openShell = 0;
 function readCfg() {
   const v = f => parseFloat($(f).value);
-  return { alt: v('alt'), inc: v('inc'), T: Math.round(v('T')), P: Math.round(v('P')), F: Math.round(v('F')),
-    pattern: $('pattern').value, elev: v('elev') || 0, nadir: v('nadir') || 0, dur: v('dur'), dt: v('dt'),
-    cell: v('cell'), j2: $('j2').checked };
+  return { shells: shells.map(s => ({ ...s, T: Math.round(s.T), P: Math.round(s.P), F: Math.round(s.F), raan: s.raan || 0 })),
+    elev: v('elev') || 0, nadir: v('nadir') || 0, dur: v('dur'), dt: v('dt'), cell: v('cell'), j2: $('j2').checked };
 }
-function footprintDeg(c) {
-  const a = RE + c.alt, e = c.elev * D2R;
+function footprintDeg(alt, c) {
+  const a = RE + alt, e = c.elev * D2R;
   let lam = Math.acos(RE * Math.cos(e) / a) - e;
   if (c.nadir > 0) {
     const rho = Math.asin(RE / a), eta = c.nadir * D2R;
@@ -307,32 +318,90 @@ function footprintDeg(c) {
   }
   return lam / D2R;
 }
+function shellLabel(s) { return `${isFinite(s.inc) ? s.inc : '?'}°: ${s.T}/${s.P}/${s.F} ${s.pattern}`; }
+function validateShell(s) {
+  if (!(s.alt >= 200 && s.alt <= 40000)) return 'Altitude must be between 200 and 40 000 km.';
+  if (!(s.inc >= 0 && s.inc <= 180)) return 'Inclination must be between 0° and 180°.';
+  if (!(s.T >= 1 && s.P >= 1)) return 'T and P must be at least 1.';
+  if (s.T % s.P) return `T (${s.T}) must be a multiple of P (${s.P}).`;
+  if (!(s.F >= 0 && s.F < s.P)) return `F must be between 0 and P − 1 (${s.P - 1}).`;
+  if (!isFinite(s.raan)) return 'RAAN offset must be a number.';
+  return null;
+}
 function validate(c) {
-  if (!(c.alt >= 200 && c.alt <= 40000)) return 'Altitude must be between 200 and 40 000 km.';
-  if (!(c.inc >= 0 && c.inc <= 180)) return 'Inclination must be between 0° and 180°.';
-  if (!(c.T >= 1 && c.P >= 1)) return 'T and P must be at least 1.';
-  if (c.T % c.P) return `T (${c.T}) must be a multiple of P (${c.P}).`;
-  if (!(c.F >= 0 && c.F < c.P)) return `F must be between 0 and P − 1 (${c.P - 1}).`;
+  if (!c.shells.length) return 'Add at least one shell.';
+  for (let i = 0; i < c.shells.length; i++) { const e = validateShell(c.shells[i]); if (e) return c.shells.length > 1 ? `Shell ${i + 1}: ${e}` : e; }
   if (!(c.elev >= 0 && c.elev < 90)) return 'Minimum elevation must be between 0° and 90°.';
   if (!(c.dur > 0) || !(c.dt >= 1)) return 'Duration and time step must be positive.';
   const steps = Math.floor(c.dur * 3600 / c.dt) + 1;
   if (steps > 60000) return `That is ${steps.toLocaleString()} time steps. Keep it under 60 000 by raising the step or shortening the run.`;
-  if (c.T > 5000) return 'Keep T at or below 5000 satellites.';
+  if (c.shells.reduce((n, s) => n + s.T, 0) > 5000) return 'Keep the total at or below 5000 satellites.';
   return null;
 }
 function updateEst() {
   const c = readCfg();
-  $('notation').textContent = `${isFinite(c.inc) ? c.inc : '?'}°: ${c.T}/${c.P}/${c.F} ${c.pattern}`;
-  const lam = footprintDeg(c);
-  const period = 2 * Math.PI * Math.sqrt(Math.pow(RE + c.alt, 3) / MU) / 60;
-  $('fp').textContent = isFinite(lam) ? `Footprint radius ${(lam * D2R * RE).toFixed(0)} km (${lam.toFixed(2)}° central angle) · period ${period.toFixed(1)} min` : '';
+  document.querySelectorAll('#shells .shell').forEach((card, i) => {
+    const s = c.shells[i], lam = footprintDeg(s.alt, c), e = validateShell(s), fp = card.querySelector('.sfp');
+    const period = 2 * Math.PI * Math.sqrt(Math.pow(RE + s.alt, 3) / MU) / 60;
+    card.querySelector('.snot').textContent = `${shellLabel(s)} · ${isFinite(s.alt) ? s.alt : '?'} km`;
+    fp.textContent = e || (isFinite(lam) ? `Footprint radius ${(lam * D2R * RE).toFixed(0)} km (${lam.toFixed(2)}° central angle) · period ${period.toFixed(1)} min` : '');
+    fp.classList.toggle('bad', !!e);
+  });
   const err = validate(c), est = $('est');
   if (err) { est.textContent = err; est.classList.add('bad'); $('run').disabled = true; return; }
   est.classList.remove('bad'); $('run').disabled = running;
-  const steps = Math.floor(c.dur * 3600 / c.dt) + 1;
-  const passMin = 2 * lam * D2R * RE / 7.5 / 60;
-  est.textContent = `${steps.toLocaleString()} steps × ${c.T.toLocaleString()} satellites` + (c.dt / 60 > passMin * 0.5 ? ` · step is coarse next to a ~${passMin.toFixed(1)} min pass` : '');
+  const steps = Math.floor(c.dur * 3600 / c.dt) + 1, N = c.shells.reduce((n, s) => n + s.T, 0);
+  const passMin = 2 * Math.min(...c.shells.map(s => footprintDeg(s.alt, c))) * D2R * RE / 7.5 / 60;
+  est.textContent = `${steps.toLocaleString()} steps × ${N.toLocaleString()} satellites` + (c.shells.length > 1 ? ` in ${c.shells.length} shells` : '') + (c.dt / 60 > passMin * 0.5 ? ` · step is coarse next to a ~${passMin.toFixed(1)} min pass` : '');
 }
+
+/* ---------- shell list ---------- */
+function shellCard(s, i) {
+  const d = document.createElement('div'), open = i === openShell, v = x => isFinite(x) ? x : '';
+  d.className = 'shell'; d.dataset.i = i;
+  d.innerHTML = `<div class="shead"><button type="button" class="stog" aria-expanded="${open}"><i class="dot" style="background: var(--sh${i % 6})"></i><span class="sname">Shell ${i + 1}</span><span class="snot"></span></button><button type="button" class="sdel" aria-label="Delete shell ${i + 1}" title="Delete shell"${shells.length < 2 ? ' disabled' : ''}>×</button></div>
+    <div class="sbody"${open ? '' : ' hidden'}>
+      <div class="row2">
+        <label class="f">Altitude (km)<input type="number" data-k="alt" value="${v(s.alt)}" min="200" max="40000" step="10"></label>
+        <label class="f">Inclination (°)<input type="number" data-k="inc" value="${v(s.inc)}" min="0" max="180" step="0.1"></label>
+      </div>
+      <div class="row3">
+        <label class="f">T (sats)<input type="number" data-k="T" value="${v(s.T)}" min="1" max="5000" step="1"></label>
+        <label class="f">P (planes)<input type="number" data-k="P" value="${v(s.P)}" min="1" max="500" step="1"></label>
+        <label class="f">F (phasing)<input type="number" data-k="F" value="${v(s.F)}" min="0" max="499" step="1"></label>
+      </div>
+      <div class="row2">
+        <label class="f">Pattern<select data-k="pattern"><option value="delta" title="Nodes spread over 360°">Delta</option><option value="star" title="Nodes spread over 180°">Star</option></select></label>
+        <label class="f">RAAN offset (°)<input type="number" data-k="raan" value="${v(s.raan)}" min="-360" max="360" step="0.5"></label>
+      </div>
+      <div class="est sfp"></div>
+    </div>`;
+  d.querySelector('select').value = s.pattern;
+  return d;
+}
+function renderShells() { $('shells').replaceChildren(...shells.map(shellCard)); updateEst(); drawGeo(); }
+$('shells').addEventListener('input', e => {
+  const k = e.target.dataset.k; if (!k) return;
+  shells[+e.target.closest('.shell').dataset.i][k] = k === 'pattern' ? e.target.value : parseFloat(e.target.value);
+  updateEst(); drawGeo();
+});
+$('shells').addEventListener('click', e => {
+  const card = e.target.closest('.shell'); if (!card) return;
+  const i = +card.dataset.i;
+  if (e.target.closest('.sdel')) {
+    if (shells.length < 2) return;
+    shells.splice(i, 1); openShell = openShell === i ? -1 : openShell > i ? openShell - 1 : openShell;
+    renderShells();
+  } else if (e.target.closest('.stog')) {
+    openShell = openShell === i ? -1 : i;
+    for (const c of $('shells').children) { const o = +c.dataset.i === openShell; c.querySelector('.stog').setAttribute('aria-expanded', o); c.querySelector('.sbody').hidden = !o; }
+    drawGeo();
+  }
+});
+$('addShell').addEventListener('click', () => {
+  shells.push({ ...shells[shells.length - 1] }); openShell = shells.length - 1; renderShells();
+  const first = $('shells').lastElementChild.querySelector('input'); first.focus(); first.select();
+});
 
 /* ---------- WebGL ---------- */
 const canvas = $('gl'), gl = canvas.getContext('webgl2', { antialias: false, alpha: false });
@@ -348,58 +417,77 @@ void main(){ vUv = aPos*0.5+0.5; gl_Position = vec4(aPos,0.,1.); }`;
 const VS_FP = `#version 300 es
 layout(location=0) in vec2 aCorner;
 layout(location=1) in vec4 aSat;
-uniform float uLam, uPad;
-flat out vec3 vSat;
+uniform float uPad;
+flat out vec4 vSat;
 void main(){
   float lon = aSat.x + aCorner.x*(aSat.z+uPad);
-  float lat = clamp(aSat.y + aCorner.y*(uLam+uPad), -90., 90.);
+  float lat = clamp(aSat.y + aCorner.y*(aSat.w+uPad), -90., 90.);
   float la = radians(aSat.y);
-  vSat = vec3(sin(la), cos(la), radians(aSat.x));
+  vSat = vec4(sin(la), cos(la), radians(aSat.x), cos(radians(aSat.w)));
   gl_Position = vec4(lon/180., lat/90., 0., 1.);
 }`;
 const FS_FP = `#version 300 es
 precision highp float;
-flat in vec3 vSat; uniform float uCosLam; uniform vec2 uSize; out vec4 o;
+flat in vec4 vSat; uniform vec2 uSize; out vec4 o;
 void main(){
   float lon = radians(gl_FragCoord.x/uSize.x*360.-180.);
   float lat = radians(gl_FragCoord.y/uSize.y*180.-90.);
   float c = vSat.x*sin(lat) + vSat.y*cos(lat)*cos(lon - vSat.z);
-  if (c < uCosLam) discard;
+  if (c < vSat.w) discard;
   o = vec4(1.);
 }`;
+// s2, s3 (half float): the cell's 8 longest gaps in minutes, longest first, for the 95th percentile
 const FS_UPD = `#version 300 es
 precision highp float; precision highp sampler2D;
-uniform sampler2D uPos, uCov, uS0, uS1; uniform float uT, uDt;
-layout(location=0) out vec4 o0; layout(location=1) out vec4 o1;
+uniform sampler2D uPos, uCov, uS0, uS1, uS2, uS3; uniform float uT, uDt;
+layout(location=0) out vec4 o0; layout(location=1) out vec4 o1; layout(location=2) out vec4 o2; layout(location=3) out vec4 o3;
 void main(){
   ivec2 p = ivec2(gl_FragCoord.xy);
-  vec4 s0 = texelFetch(uS0,p,0); vec4 s1 = texelFetch(uS1,p,0);
+  vec4 s0 = texelFetch(uS0,p,0); vec4 s1 = texelFetch(uS1,p,0); vec4 s2 = texelFetch(uS2,p,0); vec4 s3 = texelFetch(uS3,p,0);
   vec2 ll = texelFetch(uPos,p,0).xy;
   if (ll.x < 900.) {
     ivec2 cs = textureSize(uCov,0);
     ivec2 q = ivec2(clamp(floor((ll.y+180.)/360.*float(cs.x)),0.,float(cs.x-1)), clamp(floor((ll.x+90.)/180.*float(cs.y)),0.,float(cs.y-1)));
     if (texelFetch(uCov,q,0).r > 0.5) {
-      if (s0.x >= 0.) { float g = uT - s0.x - uDt; if (g > 0.5*uDt) { s0.y = max(s0.y,g); s0.z += g; s0.w += 1.; } }
+      if (s0.x >= 0.) { float g = uT - s0.x - uDt; if (g > 0.5*uDt) {
+        s0.y = max(s0.y,g); s0.z += g; s0.w += 1.;
+        float t[8] = float[8](s2.x, s2.y, s2.z, s2.w, s3.x, s3.y, s3.z, s3.w);
+        float v = g / 60.;
+        for (int i = 0; i < 8; i++) if (v > t[i]) { float x = t[i]; t[i] = v; v = x; }
+        s2 = vec4(t[0], t[1], t[2], t[3]); s3 = vec4(t[4], t[5], t[6], t[7]);
+      } }
       else s1.y = uT;
       s0.x = uT; s1.x += 1.;
     }
   }
-  o0 = s0; o1 = s1;
+  o0 = s0; o1 = s1; o2 = s2; o3 = s3;
 }`;
 const METRIC_GLSL = `
 uniform int uMetric; uniform bool uEdges; uniform float uTend, uSteps;
-float metric(vec4 s0, vec4 s1){
-  if (s1.x < .5) return (uMetric >= 2) ? 0. : -1.;
+// linear-interpolated 95th percentile from the 8 longest gaps; past (n-1)*0.05 >= 7 it is the 8th-longest, an upper bound
+float p95(vec4 s0, vec4 s2, vec4 s3, float sg, float eg){
+  float t[8] = float[8](s2.x, s2.y, s2.z, s2.w, s3.x, s3.y, s3.z, s3.w);
+  float e[2] = float[2](sg / 60., eg / 60.);
+  float n = s0.w;
+  for (int k = 0; k < 2; k++) if (e[k] > 0.) { n += 1.; float v = e[k]; for (int i = 0; i < 8; i++) if (v > t[i]) { float x = t[i]; t[i] = v; v = x; } }
+  if (n < .5) return 0.;
+  float pos = (n - 1.) * .05; int i0 = int(floor(pos));
+  if (i0 >= 7) return t[7];
+  return mix(t[i0], t[i0 + 1], pos - float(i0));
+}
+float metric(vec4 s0, vec4 s1, vec4 s2, vec4 s3){
+  if (s1.x < .5) return (uMetric >= 3) ? 0. : -1.;
   float sg = 0., eg = 0.;
   if (uEdges) { sg = s1.y; eg = uTend - s0.x; }
   if (uMetric == 0) return max(s0.y, max(sg, eg)) / 60.;
-  if (uMetric == 1) { float n = s0.w + (sg > 0. ? 1. : 0.) + (eg > 0. ? 1. : 0.); return n > 0. ? (s0.z + sg + eg) / n / 60. : 0.; }
-  if (uMetric == 2) return s1.x / uSteps * 100.;
+  if (uMetric == 1) return p95(s0, s2, s3, sg, eg);
+  if (uMetric == 2) { float n = s0.w + (sg > 0. ? 1. : 0.) + (eg > 0. ? 1. : 0.); return n > 0. ? (s0.z + sg + eg) / n / 60. : 0.; }
+  if (uMetric == 3) return s1.x / uSteps * 100.;
   return s0.w + 1.;
 }`;
 const FS_DISP = `#version 300 es
 precision highp float; precision highp sampler2D;
-uniform sampler2D uS0, uS1, uRow, uRamp;
+uniform sampler2D uS0, uS1, uS2, uS3, uRow, uRamp;
 uniform vec4 uView; uniform vec2 uRes; uniform float uVmax; uniform int uTW, uH; uniform vec3 uNoData, uBg;
 in vec2 vUv; out vec4 o;
 ${METRIC_GLSL}
@@ -415,7 +503,7 @@ void main(){
   int k = clamp(int(floor(fk)), 0, int(rs.y)-1);
   int idx = int(rs.x) + k;
   ivec2 p = ivec2(idx % uTW, idx / uTW);
-  float v = metric(texelFetch(uS0,p,0), texelFetch(uS1,p,0));
+  float v = metric(texelFetch(uS0,p,0), texelFetch(uS1,p,0), texelFetch(uS2,p,0), texelFetch(uS3,p,0));
   vec3 col;
   if (v < 0.) col = mod(gl_FragCoord.x + gl_FragCoord.y, 7.) < 1.6 ? uNoData*0.82 : uNoData;
   else col = texture(uRamp, vec2(clamp(v/max(uVmax,1e-6),0.,1.)*0.996+0.002, .5)).rgb;
@@ -429,7 +517,7 @@ void main(){
 }`;
 const FS_RED = `#version 300 es
 precision highp float; precision highp sampler2D;
-uniform sampler2D uS0, uS1, uRow; uniform int uTW;
+uniform sampler2D uS0, uS1, uS2, uS3, uRow; uniform int uTW;
 out vec4 o;
 ${METRIC_GLSL}
 void main(){
@@ -439,7 +527,7 @@ void main(){
   float mn = 1e30, mx = -1e30, sum = 0., cnt = 0.;
   for (int k = 0; k < n; k++) {
     int idx = s + k; ivec2 p = ivec2(idx % uTW, idx / uTW);
-    float v = metric(texelFetch(uS0,p,0), texelFetch(uS1,p,0));
+    float v = metric(texelFetch(uS0,p,0), texelFetch(uS1,p,0), texelFetch(uS2,p,0), texelFetch(uS3,p,0));
     if (v >= 0.) { mn = min(mn,v); mx = max(mx,v); sum += v; cnt += 1.; }
   }
   o = vec4(cnt > 0. ? mn : -1., cnt > 0. ? sum/cnt : -1., cnt > 0. ? mx : -1., cnt/float(n));
@@ -493,7 +581,7 @@ function initGL() {
 let G = null; // { cellKm, H, W, TW, TH, N, rowStart, rowN, posTex, rowTex, covTex, covFb, st:[{s0,s1,fb}x2], redTex, redFb }
 function buildGrid(cellKm) {
   if (G && G.cellKm === cellKm) return;
-  if (G) { [G.posTex, G.rowTex, G.covTex, G.redTex, ...G.st.flatMap(s => [s.s0, s.s1])].forEach(t => gl.deleteTexture(t)); [G.covFb, G.redFb, ...G.st.map(s => s.fb)].forEach(f => gl.deleteFramebuffer(f)); }
+  if (G) { [G.posTex, G.rowTex, G.covTex, G.redTex, ...G.st.flatMap(s => [s.s0, s.s1, s.s2, s.s3])].forEach(t => gl.deleteTexture(t)); [G.covFb, G.redFb, ...G.st.map(s => s.fb)].forEach(f => gl.deleteFramebuffer(f)); }
   const H = Math.round(Math.PI * RE / cellKm), W = 2 * H, dLat = 180 / H;
   const rowStart = new Float64Array(H), rowN = new Int32Array(H); let N = 0;
   for (let j = 0; j < H; j++) { const lat = -90 + (j + .5) * dLat; rowN[j] = Math.max(1, Math.round(2 * H * Math.cos(lat * D2R))); rowStart[j] = N; N += rowN[j]; }
@@ -507,76 +595,93 @@ function buildGrid(cellKm) {
   g.posTex = tex(TW, TH, gl.RG32F, gl.RG, gl.FLOAT, pos);
   g.rowTex = tex(H, 1, gl.RG32F, gl.RG, gl.FLOAT, rowData);
   g.covTex = tex(W, H, gl.R8, gl.RED, gl.UNSIGNED_BYTE, null); g.covFb = fbo(g.covTex);
-  g.st = [0, 1].map(() => { const s0 = tex(TW, TH, gl.RGBA32F, gl.RGBA, gl.FLOAT), s1 = tex(TW, TH, gl.RG32F, gl.RG, gl.FLOAT); return { s0, s1, fb: fbo(s0, s1) }; });
+  g.st = [0, 1].map(() => {
+    const s0 = tex(TW, TH, gl.RGBA32F, gl.RGBA, gl.FLOAT), s1 = tex(TW, TH, gl.RG32F, gl.RG, gl.FLOAT);
+    const s2 = tex(TW, TH, gl.RGBA16F, gl.RGBA, gl.HALF_FLOAT), s3 = tex(TW, TH, gl.RGBA16F, gl.RGBA, gl.HALF_FLOAT);
+    return { s0, s1, s2, s3, fb: fbo(s0, s1, s2, s3) };
+  });
   g.redTex = tex(H, 1, gl.RGBA32F, gl.RGBA, gl.FLOAT); g.redFb = fbo(g.redTex);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   G = g;
 }
 
 /* ---------- constellation ---------- */
-function makeShell(c) {
-  const a = RE + c.alt, n = Math.sqrt(MU / (a * a * a)), i = c.inc * D2R, k = (RE / a) ** 2, si2 = Math.sin(i) ** 2;
-  const S = c.T / c.P, spread = c.pattern === 'star' ? Math.PI : 2 * Math.PI;
+function makeShell(s, j2) {
+  const a = RE + s.alt, n = Math.sqrt(MU / (a * a * a)), i = s.inc * D2R, k = (RE / a) ** 2, si2 = Math.sin(i) ** 2;
+  const S = s.T / s.P, spread = s.pattern === 'star' ? Math.PI : 2 * Math.PI, O0 = s.raan * D2R;
   const sats = [];
-  for (let p = 0; p < c.P; p++) for (let s = 0; s < S; s++)
-    sats.push({ O0: p * spread / c.P, u0: s * 2 * Math.PI / S + p * c.F * 2 * Math.PI / c.T });
+  for (let p = 0; p < s.P; p++) for (let q = 0; q < S; q++)
+    sats.push({ O0: O0 + p * spread / s.P, u0: q * 2 * Math.PI / S + p * s.F * 2 * Math.PI / s.T });
   return { sats, ci: Math.cos(i), sinI: Math.sin(i),
-    dO: c.j2 ? -1.5 * n * J2 * k * Math.cos(i) : 0,
-    du: n * (1 + (c.j2 ? 0.75 * J2 * k * (6 - 8 * si2) : 0)) };
+    dO: j2 ? -1.5 * n * J2 * k * Math.cos(i) : 0,
+    du: n * (1 + (j2 ? 0.75 * J2 * k * (6 - 8 * si2) : 0)) };
 }
-function subPoints(sh, t, out) {
-  const { sats, ci, sinI } = sh, th = WE * t;
-  for (let q = 0; q < sats.length; q++) {
-    const O = sats[q].O0 + sh.dO * t, u = sats[q].u0 + sh.du * t;
-    const cO = Math.cos(O), sO = Math.sin(O), cu = Math.cos(u), su = Math.sin(u);
-    const x = cO * cu - sO * ci * su, y = sO * cu + cO * ci * su, z = sinI * su;
-    let lon = (Math.atan2(y, x) - th) / D2R; lon = ((lon + 180) % 360 + 360) % 360 - 180;
-    out[q * 2] = lon; out[q * 2 + 1] = Math.asin(Math.max(-1, Math.min(1, z))) / D2R;
+// all shells, with each shell's offset into the flat satellite list and its footprint radius
+function makeConstellation(c) {
+  let off = 0;
+  const shs = c.shells.map(s => { const sh = makeShell(s, c.j2); sh.off = off; sh.lam = footprintDeg(s.alt, c); off += sh.sats.length; return sh; });
+  return { shells: shs, N: off };
+}
+function subPoints(con, t, out) {
+  const th = WE * t;
+  for (const sh of con.shells) {
+    const { sats, ci, sinI } = sh;
+    for (let q = 0; q < sats.length; q++) {
+      const O = sats[q].O0 + sh.dO * t, u = sats[q].u0 + sh.du * t;
+      const cO = Math.cos(O), sO = Math.sin(O), cu = Math.cos(u), su = Math.sin(u);
+      const x = cO * cu - sO * ci * su, y = sO * cu + cO * ci * su, z = sinI * su;
+      let lon = (Math.atan2(y, x) - th) / D2R; lon = ((lon + 180) % 360 + 360) % 360 - 180;
+      const o = (sh.off + q) * 2;
+      out[o] = lon; out[o + 1] = Math.asin(Math.max(-1, Math.min(1, z))) / D2R;
+    }
   }
 }
 
 /* ---------- simulation ---------- */
-let running = false, runToken = 0, R = null; // R: result {cfg, cur, steps, Tend, sh, lastPts}
+let running = false, runToken = 0, R = null; // R: result {cfg, cur, steps, Tend, con, lastPts}
 async function runSim() {
   const c = readCfg(), err = validate(c); if (err) return;
   const token = ++runToken; running = true; $('run').disabled = true;
-  R = null; prof = null; hover = null; for (const t of ['t0','t1','t2','t3']) $(t).textContent = '–'; drawProfile();
+  R = null; prof = null; hover = null; for (const t of ['t0','t1','t2','t3','t4']) $(t).textContent = '–'; drawProfile();
   $('busy').hidden = false; $('busytxt').textContent = 'Building grid…'; $('busybar').style.width = '0%';
   await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
   try { buildGrid(c.cell); } catch (e) { $('busy').hidden = true; running = false; showErr(e.message); return; }
-  const g = G, sh = makeShell(c), N = sh.sats.length, lam = footprintDeg(c);
+  const g = G, con = makeConstellation(c), N = con.N;
   const steps = Math.floor(c.dur * 3600 / c.dt) + 1, Tend = (steps - 1) * c.dt;
-  const pts = new Float32Array(N * 2), inst = new Float32Array(N * 2 * 4);
-  const sinLam = Math.sin(lam * D2R), pad = g.dLat;
+  const pts = new Float32Array(N * 2), inst = new Float32Array(N * 2 * 4), lamQ = new Float32Array(N);
+  for (const sh of con.shells) lamQ.fill(sh.lam, sh.off, sh.off + sh.sats.length);
+  const pad = g.dLat, DB4 = [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2, gl.COLOR_ATTACHMENT3];
   // reset state
   let cur = 0;
-  for (const s of g.st) { gl.bindFramebuffer(gl.FRAMEBUFFER, s.fb); gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]); gl.clearBufferfv(gl.COLOR, 0, [-1, 0, 0, 0]); gl.clearBufferfv(gl.COLOR, 1, [0, -1, 0, 0]); }
+  for (const s of g.st) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, s.fb); gl.drawBuffers(DB4);
+    gl.clearBufferfv(gl.COLOR, 0, [-1, 0, 0, 0]); gl.clearBufferfv(gl.COLOR, 1, [0, -1, 0, 0]); gl.clearBufferfv(gl.COLOR, 2, [0, 0, 0, 0]); gl.clearBufferfv(gl.COLOR, 3, [0, 0, 0, 0]);
+  }
   gl.bindBuffer(gl.ARRAY_BUFFER, satBuf); gl.bufferData(gl.ARRAY_BUFFER, inst.byteLength, gl.DYNAMIC_DRAW);
   gl.disable(gl.BLEND); gl.disable(gl.DEPTH_TEST);
 
   const doStep = t => {
-    subPoints(sh, t, pts);
+    subPoints(con, t, pts);
     for (let q = 0; q < N; q++) {
-      const lon = pts[q * 2], lat = pts[q * 2 + 1], cl = Math.cos(lat * D2R);
-      let lc = lon, dl;
-      if (Math.abs(lat) + lam >= 89.999 || cl <= sinLam) { lc = 0; dl = 180; }
-      else dl = Math.asin(sinLam / cl) / D2R;
-      let o = q * 4; inst[o] = lc; inst[o + 1] = lat; inst[o + 2] = dl; inst[o + 3] = 0;
+      const lon = pts[q * 2], lat = pts[q * 2 + 1], cl = Math.cos(lat * D2R), lam = lamQ[q], sinLam = Math.sin(lam * D2R);
+      // a footprint over a pole spans all longitudes: the quad and its wrapped copy cover lon ± 180 between them
+      const dl = (Math.abs(lat) + lam >= 89.999 || cl <= sinLam) ? 180 : Math.asin(sinLam / cl) / D2R;
+      let o = q * 4; inst[o] = lon; inst[o + 1] = lat; inst[o + 2] = dl; inst[o + 3] = lam;
       o = (N + q) * 4;
-      inst[o] = (dl >= 180) ? 9999 : (lc - dl < -180 ? lc + 360 : (lc + dl > 180 ? lc - 360 : 9999));
-      inst[o + 1] = lat; inst[o + 2] = dl; inst[o + 3] = 0;
+      inst[o] = lon - dl < -180 ? lon + 360 : (lon + dl > 180 ? lon - 360 : 9999);
+      inst[o + 1] = lat; inst[o + 2] = dl; inst[o + 3] = lam;
     }
     // pass A: rasterise footprints into the coverage texture
     gl.bindFramebuffer(gl.FRAMEBUFFER, g.covFb); gl.viewport(0, 0, g.W, g.H);
     gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.useProgram(P_FP); gl.uniform1f(P_FP.u('uLam'), lam); gl.uniform1f(P_FP.u('uPad'), pad);
-    gl.uniform1f(P_FP.u('uCosLam'), Math.cos(lam * D2R)); gl.uniform2f(P_FP.u('uSize'), g.W, g.H);
+    gl.useProgram(P_FP); gl.uniform1f(P_FP.u('uPad'), pad); gl.uniform2f(P_FP.u('uSize'), g.W, g.H);
     gl.bindVertexArray(fpVao); gl.bindBuffer(gl.ARRAY_BUFFER, satBuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, inst);
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, 2 * N);
     // pass B: update per-cell gap statistics
     const src = g.st[cur], dst = g.st[1 - cur];
-    gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fb); gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]); gl.viewport(0, 0, g.TW, g.TH);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fb); gl.drawBuffers(DB4); gl.viewport(0, 0, g.TW, g.TH);
     gl.useProgram(P_UPD); bindTex(P_UPD, 'uPos', 0, g.posTex); bindTex(P_UPD, 'uCov', 1, g.covTex); bindTex(P_UPD, 'uS0', 2, src.s0); bindTex(P_UPD, 'uS1', 3, src.s1);
+    bindTex(P_UPD, 'uS2', 4, src.s2); bindTex(P_UPD, 'uS3', 5, src.s3);
     gl.uniform1f(P_UPD.u('uT'), t); gl.uniform1f(P_UPD.u('uDt'), c.dt);
     gl.bindVertexArray(quadVao); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     cur = 1 - cur;
@@ -594,13 +699,13 @@ async function runSim() {
     const el = performance.now() - bt;
     batch = Math.max(1, Math.min(256, Math.round(batch * Math.min(2, 40 / Math.max(el, 1)))));
     const pct = step / steps * 100, rate = step / ((performance.now() - t0) / 1000);
-    R = { cfg: c, cur, steps: step, Tend: (step - 1) * c.dt, sh, lastPts: null, partial: true }; render();
+    R = { cfg: c, cur, steps: step, Tend: (step - 1) * c.dt, con, lastPts: null, partial: true }; render();
     $('busybar').style.width = pct.toFixed(1) + '%';
     $('busytxt').textContent = `Propagating ${N.toLocaleString()} satellites over ${g.N.toLocaleString()} cells · step ${step.toLocaleString()} / ${steps.toLocaleString()} · ~${Math.max(0, (steps - step) / rate).toFixed(0)} s left`;
   }
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  subPoints(sh, Tend, pts);
-  R = { cfg: c, cur, steps, Tend, sh, lastPts: pts.slice(), secs: (performance.now() - t0) / 1000 };
+  subPoints(con, Tend, pts);
+  R = { cfg: c, cur, steps, Tend, con, lastPts: pts.slice(), secs: (performance.now() - t0) / 1000 };
   running = false; $('busy').hidden = true; updateEst();
   computeSummary(); render();
 }
@@ -611,6 +716,7 @@ function reduce(m) {
   const g = G, st = g.st[R.cur];
   gl.bindFramebuffer(gl.FRAMEBUFFER, g.redFb); gl.drawBuffers([gl.COLOR_ATTACHMENT0]); gl.viewport(0, 0, g.H, 1);
   gl.useProgram(P_RED); bindTex(P_RED, 'uS0', 0, st.s0); bindTex(P_RED, 'uS1', 1, st.s1); bindTex(P_RED, 'uRow', 2, g.rowTex);
+  bindTex(P_RED, 'uS2', 3, st.s2); bindTex(P_RED, 'uS3', 4, st.s3);
   gl.uniform1i(P_RED.u('uTW'), g.TW); setMetricUniforms(P_RED, m);
   gl.bindVertexArray(quadVao); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   const out = new Float32Array(g.H * 4); gl.readBuffer(gl.COLOR_ATTACHMENT0); gl.readPixels(0, 0, g.H, 1, gl.RGBA, gl.FLOAT, out);
@@ -625,11 +731,13 @@ function setMetricUniforms(p, m) {
 }
 function computeSummary() {
   if (!R) return;
-  const a = reduce(0), b = reduce(2);
+  const a = reduce(0), p = reduce(1), b = reduce(3);
   $('t0').textContent = a.max >= 0 ? fmtDur(a.max) : 'none';
   let worstLat = null; for (let j = 0; j < G.H; j++) if (a.rows[j * 4 + 2] === a.max) { worstLat = -90 + (j + .5) * G.dLat; break; }
   $('t0s').textContent = worstLat !== null ? `worst at ${Math.abs(worstLat).toFixed(1)}° ${worstLat >= 0 ? 'N' : 'S'}` : ' ';
   $('t1').textContent = a.mean >= 0 ? fmtDur(a.mean) : '–';
+  $('t4').textContent = p.mean >= 0 ? fmtDur(p.mean) : '–';
+  $('t4s').textContent = p.max >= 0 ? `worst cell ${fmtDur(p.max)}` : ' ';
   $('t2').textContent = b.mean.toFixed(b.mean < 10 ? 2 : 1) + ' %';
   $('t3').textContent = ((1 - a.seenFrac) * 100).toFixed(1) + ' %';
   $('t3s').textContent = `${G.N.toLocaleString()} cells · ${R.cfg.cell} km · run took ${R.secs.toFixed(1)} s`;
@@ -643,7 +751,7 @@ function updateProfile() {
   let tot = 0; for (let j = 0; j < G.H; j++) { const w = G.rowN[j] * r[j * 4 + 3]; if (w > 0) { arr.push([r[j * 4 + 2], w]); tot += w; } }
   arr.sort((a, b) => a[0] - b[0]); let acc = 0, p98 = prof.max;
   for (const [v, w] of arr) { acc += w; if (acc >= 0.98 * tot) { p98 = v; break; } }
-  autoMax = Math.max(m === 3 ? Math.ceil(p98) : p98, 1e-3);
+  autoMax = Math.max(m === 4 ? Math.ceil(p98) : p98, 1e-3);
   drawLegend(); drawProfile();
 }
 function vmax() { const v = parseFloat($('vmax').value); return v > 0 ? v : autoMax; }
@@ -673,6 +781,7 @@ function draw() {
     const st = G.st[R.cur];
     gl.useProgram(P_DISP);
     bindTex(P_DISP, 'uS0', 0, st.s0); bindTex(P_DISP, 'uS1', 1, st.s1); bindTex(P_DISP, 'uRow', 2, G.rowTex); bindTex(P_DISP, 'uRamp', 3, rampTex);
+    bindTex(P_DISP, 'uS2', 4, st.s2); bindTex(P_DISP, 'uS3', 5, st.s3);
     gl.uniform4f(P_DISP.u('uView'), view.cx, view.cy, sl, sa); gl.uniform2f(P_DISP.u('uRes'), w, h);
     gl.uniform1f(P_DISP.u('uVmax'), vmax()); gl.uniform1i(P_DISP.u('uTW'), G.TW); gl.uniform1i(P_DISP.u('uH'), G.H);
     gl.uniform3fv(P_DISP.u('uNoData'), hexRgb(css('--nodata'))); gl.uniform3fv(P_DISP.u('uBg'), bg);
@@ -790,7 +899,7 @@ function drawLegend() {
 
 /* ---------- hover & navigation ---------- */
 let hover = null, profHoverLat = null;
-const rd0 = new Float32Array(4), rd1 = new Float32Array(4);
+const rd0 = new Float32Array(4), rd1 = new Float32Array(4), rd2 = new Float32Array(4), rd3 = new Float32Array(4);
 function screenToLL(ev) {
   const r = $('mapwrap').getBoundingClientRect(), [sl, sa] = spans();
   const u = (ev.clientX - r.left) / r.width, v = (ev.clientY - r.top) / r.height;
@@ -803,12 +912,24 @@ function cellAt(lon, lat) {
   const k = Math.max(0, Math.min(n - 1, Math.floor((lon + 180) / 360 * n)));
   return { j, k, idx: g.rowStart[j] + k };
 }
-function hostMetric(s0, s1, m) {
-  if (s1[0] < .5) return m >= 2 ? 0 : -1;
+// mirrors p95() in METRIC_GLSL; also reports whether the value is exact or the 8th-longest-gap upper bound
+function hostP95(s0, s2, s3, sg, eg) {
+  const t = [...s2, ...s3];
+  let n = s0[3];
+  for (const e of [sg / 60, eg / 60]) if (e > 0) { n++; t.push(e); }
+  t.sort((a, b) => b - a);
+  if (n < .5) return [0, true];
+  const pos = (n - 1) * .05, i0 = Math.floor(pos);
+  if (i0 >= 7) return [t[7], i0 === 7 && pos === 7];
+  return [t[i0] + (t[i0 + 1] - t[i0]) * (pos - i0), true];
+}
+function hostMetric(s0, s1, s2, s3, m) {
+  if (s1[0] < .5) return m >= 3 ? 0 : -1;
   const edges = $('edges').checked, sg = edges ? s1[1] : 0, eg = edges ? R.Tend - s0[0] : 0;
   if (m === 0) return Math.max(s0[1], sg, eg) / 60;
-  if (m === 1) { const n = s0[3] + (sg > 0) + (eg > 0); return n ? (s0[2] + sg + eg) / n / 60 : 0; }
-  if (m === 2) return s1[0] / R.steps * 100;
+  if (m === 1) return hostP95(s0, s2, s3, sg, eg)[0];
+  if (m === 2) { const n = s0[3] + (sg > 0) + (eg > 0); return n ? (s0[2] + sg + eg) / n / 60 : 0; }
+  if (m === 3) return s1[0] / R.steps * 100;
   return s0[3] + 1;
 }
 function showTip(ev) {
@@ -820,10 +941,13 @@ function showTip(ev) {
   gl.bindFramebuffer(gl.FRAMEBUFFER, st.fb);
   gl.readBuffer(gl.COLOR_ATTACHMENT0); gl.readPixels(px, py, 1, 1, gl.RGBA, gl.FLOAT, rd0);
   gl.readBuffer(gl.COLOR_ATTACHMENT1); gl.readPixels(px, py, 1, 1, gl.RGBA, gl.FLOAT, rd1);
+  gl.readBuffer(gl.COLOR_ATTACHMENT2); gl.readPixels(px, py, 1, 1, gl.RGBA, gl.FLOAT, rd2);
+  gl.readBuffer(gl.COLOR_ATTACHMENT3); gl.readPixels(px, py, 1, 1, gl.RGBA, gl.FLOAT, rd3);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   const clat = -90 + (c.j + .5) * g.dLat, clon = -180 + (c.k + .5) * 360 / g.rowN[c.j];
   const ll = `${Math.abs(clat).toFixed(3)}°${clat >= 0 ? 'N' : 'S'} ${Math.abs(clon).toFixed(3)}°${clon >= 0 ? 'E' : 'W'}`;
-  const rowsHtml = METRICS.map((mm, i) => `<dt>${mm.name}</dt><dd>${fmtVal(hostMetric(rd0, rd1, i), i)}</dd>`).join('');
+  const edges = $('edges').checked, p95exact = rd1[0] < .5 || hostP95(rd0, rd2, rd3, edges ? rd1[1] : 0, edges ? R.Tend - rd0[0] : 0)[1];
+  const rowsHtml = METRICS.map((mm, i) => `<dt>${mm.name}</dt><dd>${i === 1 && !p95exact ? '≤ ' : ''}${fmtVal(hostMetric(rd0, rd1, rd2, rd3, i), i)}</dd>`).join('');
   tip.innerHTML = `<div class="h">${ll}</div><dl>${rowsHtml}<dt>Cell</dt><dd>${c.idx.toLocaleString()}</dd></dl>`;
   tip.hidden = false;
   const tw = tip.offsetWidth, th = tip.offsetHeight;
@@ -877,37 +1001,42 @@ function renderGeo() {
   if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
   const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, W, H);
   if (validate(c)) { geoState = null; ctx.fillStyle = css('--warn'); ctx.font = `${13 * dpr}px Archivo, sans-serif`; ctx.textAlign = 'center'; ctx.fillText(validate(c), W / 2, H / 2); return; }
-  const sh = makeShell(c), t = c.dur * 3600, a = (RE + c.alt) / RE, ci = sh.ci, si = sh.sinI, S = c.T / c.P;
-  const theta = WE * t, lam = footprintDeg(c) * D2R;
-  const scale = Math.min(W, H) / 2 * 0.86 / a * geoView.zoom, cx = W / 2, cy = H / 2;
+  const t = c.dur * 3600, theta = WE * t, con = makeConstellation(c);
+  const aMax = Math.max(...c.shells.map(s => (RE + s.alt) / RE));
+  const scale = Math.min(W, H) / 2 * 0.86 / aMax * geoView.zoom, cx = W / 2, cy = H / 2;
   const P2 = v => { const r = rot(v); return [cx + r[0] * scale, cy - r[1] * scale, r[2]]; };
   const hidden = (r, rad) => r[2] < 0 && ((r[0] - cx) ** 2 + (r[1] - cy) ** 2) < (rad * scale) ** 2; // behind Earth disc
   const earthR = 1;
-  const ink = css('--fg'), satC = css('--sat'), hl = css('--hl'), muted = css('--muted');
-  const hlPlane = geoHover ? geoHover.p : -1;
-  // satellites
-  const sats = sh.sats.map((s, q) => { const O = s.O0 + sh.dO * t, u = s.u0 + sh.du * t; const e = eciUnit(O, u, ci, si); return { q, p: Math.floor(q / S), s: q % S, O, u, e, r: P2(e.map(x => x * a)) }; });
-  const planeO = []; for (let p = 0; p < c.P; p++) planeO.push(sats[p * S].O);
-  // orbit rings as segments split front/back
-  const ringPts = 160, back = [], front = [];
-  for (let p = 0; p < c.P; p++) {
-    const pts = []; for (let k = 0; k <= ringPts; k++) pts.push(P2(eciUnit(planeO[p], k / ringPts * 2 * Math.PI, ci, si).map(x => x * a)));
-    for (let k = 0; k < ringPts; k++) { const A = pts[k], B = pts[k + 1], hid = hidden(A, earthR) || hidden(B, earthR); (hid ? back : front).push([A, B, p]); }
-  }
-  const ringW = c.P > 30 ? 0.6 : 1;
+  const ink = css('--fg'), hl = css('--hl'), muted = css('--muted'), shellC = c.shells.map((_, i) => css(`--sh${i % 6}`));
+  const hlPlane = geoHover ? geoHover.key : -1;
+  // satellites, keyed by shell and plane; orbit rings as segments split front/back
+  const sats = [], ringPts = 160, back = [], front = [];
+  con.shells.forEach((sh, si) => {
+    const a = (RE + c.shells[si].alt) / RE, S = c.shells[si].T / c.shells[si].P;
+    sh.sats.forEach((x, q) => {
+      const O = x.O0 + sh.dO * t, u = x.u0 + sh.du * t, e = eciUnit(O, u, sh.ci, sh.sinI), p = Math.floor(q / S);
+      sats.push({ id: sh.off + q, si, p, s: q % S, key: si * 1e5 + p, O, e, lam: sh.lam * D2R, r: P2(e.map(v => v * a)) });
+    });
+    for (let p = 0; p < c.shells[si].P; p++) {
+      const O = sh.sats[p * S].O0 + sh.dO * t, key = si * 1e5 + p, pts = [];
+      for (let k = 0; k <= ringPts; k++) pts.push(P2(eciUnit(O, k / ringPts * 2 * Math.PI, sh.ci, sh.sinI).map(v => v * a)));
+      for (let k = 0; k < ringPts; k++) { const A = pts[k], B = pts[k + 1], hid = hidden(A, earthR) || hidden(B, earthR); (hid ? back : front).push([A, B, key]); }
+    }
+  });
+  const ringW = back.length + front.length > 30 * ringPts ? 0.6 : 1;
   const strokeSegs = (segs, alpha) => {
     ctx.lineWidth = ringW * dpr; ctx.strokeStyle = muted; ctx.globalAlpha = alpha * (hlPlane >= 0 ? 0.45 : 1);
     ctx.beginPath(); for (const [A, B, p] of segs) if (p !== hlPlane) { ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); } ctx.stroke();
     if (hlPlane >= 0) { ctx.globalAlpha = alpha; ctx.strokeStyle = hl; ctx.lineWidth = 2 * dpr; ctx.beginPath(); for (const [A, B, p] of segs) if (p === hlPlane) { ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); } ctx.stroke(); }
     ctx.globalAlpha = 1;
   };
-  const satR = (c.T > 400 ? 1.8 : c.T > 100 ? 2.6 : 3.6) * dpr;
+  const satR = (con.N > 400 ? 1.8 : con.N > 100 ? 2.6 : 3.6) * dpr;
   const drawSats = (front) => {
     ctx.lineWidth = 1.2 * dpr; ctx.strokeStyle = css('--space');
     for (const s of sats) {
       const hid = hidden(s.r, earthR); if (hid === front) continue;
-      ctx.globalAlpha = hid ? 0.3 : 1; ctx.fillStyle = s.p === hlPlane ? hl : satC;
-      ctx.beginPath(); ctx.arc(s.r[0], s.r[1], (geoHover && geoHover.q === s.q ? 1.8 : 1) * satR, 0, Math.PI * 2); ctx.fill(); if (!hid) ctx.stroke();
+      ctx.globalAlpha = hid ? 0.3 : 1; ctx.fillStyle = s.key === hlPlane ? hl : shellC[s.si];
+      ctx.beginPath(); ctx.arc(s.r[0], s.r[1], (geoHover && geoHover.id === s.id ? 1.8 : 1) * satR, 0, Math.PI * 2); ctx.fill(); if (!hid) ctx.stroke();
     }
     ctx.globalAlpha = 1;
   };
@@ -931,15 +1060,15 @@ function renderGeo() {
   ctx.stroke();
   // footprints of near-side satellites, drawn on the sphere surface
   if ($('g-foot').checked) {
-    ctx.lineWidth = 1 * dpr; ctx.strokeStyle = satC; ctx.fillStyle = satC;
+    ctx.lineWidth = 1 * dpr;
     for (const s of sats) {
-      const n = s.e, ref = Math.abs(n[2]) < .9 ? [0, 0, 1] : [1, 0, 0];
+      const n = s.e, lam = s.lam, ref = Math.abs(n[2]) < .9 ? [0, 0, 1] : [1, 0, 0];
       let e1 = [n[1] * ref[2] - n[2] * ref[1], n[2] * ref[0] - n[0] * ref[2], n[0] * ref[1] - n[1] * ref[0]];
       const l = Math.hypot(...e1); e1 = e1.map(x => x / l);
       const e2 = [n[1] * e1[2] - n[2] * e1[1], n[2] * e1[0] - n[0] * e1[2], n[0] * e1[1] - n[1] * e1[0]];
       const pts = []; for (let k = 0; k <= 36; k++) { const ang = k / 36 * 2 * Math.PI, ca = Math.cos(lam), sa = Math.sin(lam);
         pts.push([0, 1, 2].map(i => n[i] * ca + sa * (Math.cos(ang) * e1[i] + Math.sin(ang) * e2[i]))); }
-      ctx.globalAlpha = s.p === hlPlane ? 0.5 : 0.22; ctx.strokeStyle = s.p === hlPlane ? hl : satC;
+      ctx.globalAlpha = s.key === hlPlane ? 0.5 : 0.22; ctx.strokeStyle = s.key === hlPlane ? hl : shellC[s.si];
       ctx.beginPath(); polyline(pts); ctx.stroke();
     }
     ctx.globalAlpha = 1;
@@ -949,16 +1078,19 @@ function renderGeo() {
   if (base[2] >= 0 || !hidden(np, earthR)) { ctx.strokeStyle = ink; ctx.lineWidth = 1.2 * dpr; ctx.beginPath(); ctx.moveTo(base[0], base[1]); ctx.lineTo(np[0], np[1]); ctx.stroke(); ctx.fillStyle = ink; ctx.font = `600 ${11 * dpr}px "Archivo Narrow", sans-serif`; ctx.textAlign = 'center'; ctx.fillText('N', np[0], np[1] - 5 * dpr); }
   strokeSegs(front, 0.9); drawSats(true);
   geoState = { sats, dpr };
-  // side panel
+  // side panel: the hovered satellite's shell, else the one open in the editor
+  const act = geoHover && geoHover.si < c.shells.length ? geoHover.si : Math.min(Math.max(openShell, 0), c.shells.length - 1), s = c.shells[act], sh = con.shells[act];
   const per = 2 * Math.PI / sh.du / 60;
   $('g-time').textContent = `t = ${c.dur} h (end of run)`;
-  $('g-shell').textContent = `${c.inc}°: ${c.T}/${c.P}/${c.F} ${c.pattern}`;
-  $('g-rad').textContent = `${(RE + c.alt).toFixed(0)} km (${a.toFixed(3)} R⊕)`;
+  $('g-con').textContent = `${c.shells.length} shell${c.shells.length > 1 ? 's' : ''} · ${con.N.toLocaleString()} sats`;
+  $('g-shell').textContent = `${act + 1} · ${shellLabel(s)}`;
+  $('g-shell').style.color = shellC[act];
+  $('g-rad').textContent = `${(RE + s.alt).toFixed(0)} km (${((RE + s.alt) / RE).toFixed(3)} R⊕)`;
   $('g-per').textContent = `${per.toFixed(1)} min`;
   $('g-drift').textContent = c.j2 ? `${(sh.dO / D2R * 86400).toFixed(3)}°/day` : 'off';
-  $('g-spp').textContent = S;
-  $('g-dO').textContent = `${((c.pattern === 'star' ? 180 : 360) / c.P).toFixed(2)}° in RAAN`;
-  $('g-ph').textContent = `${(c.F * 360 / c.T).toFixed(2)}°`;
+  $('g-spp').textContent = s.T / s.P;
+  $('g-dO').textContent = `${((s.pattern === 'star' ? 180 : 360) / s.P).toFixed(2)}° in RAAN`;
+  $('g-ph').textContent = `${(s.F * 360 / s.T).toFixed(2)}°`;
 }
 (function geoNav() {
   const wrap = $('geowrap'); let drag = null;
@@ -976,11 +1108,11 @@ function renderGeo() {
     const tip = $('geotip');
     if (best) {
       const lat = Math.asin(best.e[2]) / D2R; let lon = (Math.atan2(best.e[1], best.e[0]) - WE * readCfg().dur * 3600) / D2R; lon = ((lon + 180) % 360 + 360) % 360 - 180;
-      tip.textContent = `Plane ${best.p + 1} · slot ${best.s + 1} · ${Math.abs(lat).toFixed(1)}°${lat >= 0 ? 'N' : 'S'} ${Math.abs(lon).toFixed(1)}°${lon >= 0 ? 'E' : 'W'}`;
+      tip.textContent = `${shells.length > 1 ? `Shell ${best.si + 1} · plane` : 'Plane'} ${best.p + 1} · slot ${best.s + 1} · ${Math.abs(lat).toFixed(1)}°${lat >= 0 ? 'N' : 'S'} ${Math.abs(lon).toFixed(1)}°${lon >= 0 ? 'E' : 'W'}`;
       tip.hidden = false; const x = e.clientX - r.left, y = e.clientY - r.top;
       tip.style.left = (x + 14 + tip.offsetWidth > r.width ? x - tip.offsetWidth - 14 : x + 14) + 'px'; tip.style.top = Math.max(4, y - 30) + 'px';
     } else tip.hidden = true;
-    if ((best && best.q) !== (geoHover && geoHover.q)) { geoHover = best; drawGeo(); }
+    if ((best ? best.id : -1) !== (geoHover ? geoHover.id : -1)) { geoHover = best; drawGeo(); }
   });
   const end = () => { drag = null; wrap.classList.remove('drag'); };
   wrap.addEventListener('pointerup', end); wrap.addEventListener('pointercancel', end);
@@ -1013,7 +1145,7 @@ new ResizeObserver(render).observe($('mapwrap'));
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { render(); drawGeo(); });
 new MutationObserver(() => { render(); drawGeo(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-updateEst();
+renderShells();
 if (glErr) showErr(glErr);
 else { try { initGL(); render(); runSim(); } catch (e) { glErr = e.message; showErr('WebGL setup failed: ' + e.message); } }
 </script>
